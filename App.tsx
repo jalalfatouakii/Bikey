@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MapView, { Geojson, Marker, Polyline } from 'react-native-maps';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
 import * as Location from 'expo-location';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faLocationArrow } from '@fortawesome/free-solid-svg-icons';
@@ -19,6 +19,7 @@ export default function App() {
   const [hideBixi, setHideBixi] = useState(false);
   const [hideBike, setHideBike] = useState(false);
   const mapRef = useRef(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
 
   /*
@@ -73,6 +74,8 @@ async function getBixiStatus() {
 }
   // 1. One for fetching the Bixi data immediately when the app starts
 useEffect(() => {
+    setHideBixi(true);
+    setHideBixi(false);
     console.log("Initial Bixi data fetch");
     getBixi();
     getBixiStatus();
@@ -145,6 +148,8 @@ useEffect(() => {
     extractPolylines();
   }, []);
   
+
+
   const [mapRegion, setMapRegion] = useState({
     latitude: location ? location.coords.latitude : 45.5017,
     longitude: location ? location.coords.longitude : -73.5673,
@@ -166,10 +171,23 @@ useEffect(() => {
     }
     console.log("Bixi station data: lol", station, " iyiyiy",valeurs);
     let num = valeurs.num_bikes_available-valeurs.num_ebikes_available
-    alert("Station :" + station.name + "\n Velos electriques dispo : " +valeurs.num_ebikes_available + "\n Velos mecaniques dispo : " + num + "\n Ancrages dispo : " + valeurs.num_docks_available);
+    alert("Station : " + station.name + "\n Vélos electriques dispo : " +valeurs.num_ebikes_available + "\n Vélos mecaniques dispo : " + num + "\n Ancrages dispo : " + valeurs.num_docks_available);
     //console.log("Bixi station data:", bixiData[id]);
   }
 
+
+
+  
+
+  const returnValues = (id : any) => {
+    const station = bixiStations.find(station => station.station_id === id);
+    const valeurs = bixiData.find(station => station.station_id === id);
+    if (!station || !valeurs) {
+
+      return "0";
+    }
+    return valeurs.num_bikes_available
+  }
 
   // Then modify the goToLocation function like this:
 const goToLocation = () => {
@@ -200,12 +218,17 @@ const goToLocation = () => {
         key={`bixi-${station.station_id}`}
         coordinate={{
           latitude: station.lat,
-          longitude: station.lon
+          longitude: station.lon,
+
         }}
         tracksViewChanges={false}
         onPress={() => returnBixiStatus(station.station_id)}
       >
-        <View style={styles.circleMarkerRed} />
+        <View style={styles.circleMarkerRed} >
+          <Text style={styles.markerText}>
+          {returnValues(station.station_id)}
+        </Text>
+        </View>
       </Marker>
     ));
   };
@@ -222,7 +245,24 @@ const goToLocation = () => {
     return liste;
   }
 
-  
+  const showBikeModal = () => {
+    setModalVisible(true);
+    return(
+      <Modal
+            visible={modalVisible}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setModalVisible(false)}>
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgb(255, 255, 255)', width: '75%', maxHeight: '50%', margin: 'auto', borderRadius: 10, padding: 20 }}>  
+              <Text>Modal Content</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Text>Close Modal</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+    )
+
+  }
 
 
   // Function to determine polyline color based on type
@@ -255,75 +295,77 @@ const goToLocation = () => {
   return (
     <View style={styles.container}>
       {location && (
-        <MapView 
-          style={styles.map} 
+        
+        <>
+        
+        <MapView
+          style={styles.map}
           ref={mapRef}
           showsUserLocation={true}
           showsScale={true}
           mapType="standard"
-          
+
           initialRegion={{
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            latitude: mapRegion.latitude,
+            longitude: mapRegion.longitude,
+            //latitude: location.coords.latitude,
+            //longitude: location.coords.longitude,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
         >
-        {!hideBike && listeArceaux().map((arceau, index) => (
-          <Marker 
-            key={index} 
-            coordinate={arceau} 
-            tracksViewChanges={false}
-          >
-            <View style={styles.circleMarker} />
-          </Marker>
-        ))}
+          {!hideBike && listeArceaux().map((arceau, index) => (
+            <Marker
+              key={index}
+              coordinate={arceau}
+              tracksViewChanges={false}
+            >
+              <View style={styles.circleMarker} />
+            </Marker>
+          ))}
 
-        { !hideBixi && renderBixiStations()}
+          {!hideBixi && renderBixiStations()}
 
-        <TouchableOpacity
-        style={styles.goToLocationButton}
+          
+
+
+          {/* Uncomment to render bike paths */}
+          {/*
+    ))}
+    {/* Render each bike path as a Polyline
+      {bikePaths.map(path => (
+        <Polyline
+          key={path.id}
+          coordinates={path.coordinates}
+          strokeColor={getPolylineColor(path.type)}
+          strokeWidth={3}
+          lineCap="round"
+          lineJoin="round"
+          tappable={true}
+          onPress={() => console.log('Path pressed:', path.id)}
+        />
+      ))}
+    */}
+
+        </MapView><TouchableOpacity
+          style={styles.goToLocationButton}
           activeOpacity={0.7}
           onPress={goToLocation}>
-          <FontAwesomeIcon icon={faLocationArrow} style={{color:"white"}} />
+            <FontAwesomeIcon icon={faLocationArrow} style={{ color: "white" }} />
 
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.hideBikeButton}
-          activeOpacity={0.7}
-          onPress={hideBikeThings}
-        >
+          </TouchableOpacity><TouchableOpacity
+            style={styles.hideBikeButton}
+            activeOpacity={0.7}
+            onPress={hideBikeThings}
+          >
             <Text style={styles.refreshButtonText}>{hideBike ? 'Show bikes' : 'Hide bikes'}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.refreshButton}
-          activeOpacity={0.7}
-          onPress={hideBixiThings}
-        >
+          </TouchableOpacity><TouchableOpacity
+            style={styles.refreshButton}
+            activeOpacity={0.7}
+            onPress={hideBixiThings}
+          >
             <Text style={styles.refreshButtonText}>{hideBixi ? 'Show Bixi' : 'Hide Bixi'}</Text>
-        </TouchableOpacity>
-
-        {/* Uncomment to render bike paths */}
-        {/*
-        ))}
-        {/* Render each bike path as a Polyline 
-          {bikePaths.map(path => (
-            <Polyline
-              key={path.id}
-              coordinates={path.coordinates}
-              strokeColor={getPolylineColor(path.type)}
-              strokeWidth={3}
-              lineCap="round"
-              lineJoin="round"
-              tappable={true}
-              onPress={() => console.log('Path pressed:', path.id)}
-            />
-          ))}
-        */}
-
-           </MapView>
+          </TouchableOpacity></>
         
       )}
     </View>
@@ -363,9 +405,11 @@ const styles = StyleSheet.create({
     borderColor: 'white', // Optional white border for visibility
   },
   circleMarkerRed: {
-    width: 12, // Smaller size - adjust as needed
-    height: 12, // Smaller size - adjust as needed
-    borderRadius: 6, // Half of width/height for perfect circle
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 15, // Smaller size - adjust as needed
+    height: 15, // Smaller size - adjust as needed
+    borderRadius: 8, // Half of width/height for perfect circle
     backgroundColor: 'red',
     borderWidth: 1,
     borderColor: 'white', // Optional white border for visibility
@@ -418,5 +462,11 @@ goToLocationButton: {
   shadowOpacity: 0.25,
   shadowRadius: 3.84,
 },
+markerText: {
+    color: 'white', // or whatever color contrasts well with your circle
+    fontSize: 8, // adjust size as needed
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 
 });
