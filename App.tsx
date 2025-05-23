@@ -20,6 +20,7 @@ export default function App() {
   const [hideBike, setHideBike] = useState(false);
   const mapRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [bixiType, setBixiType] = useState('default');
 
 
   /*
@@ -186,7 +187,17 @@ useEffect(() => {
 
       return "0";
     }
-    return valeurs.num_bikes_available
+    if (bixiType === 'default') {
+      return valeurs.num_bikes_available}
+    else if (bixiType === 'ebike') {
+      return valeurs.num_ebikes_available
+    }
+    else if (bixiType === 'mechanic') {
+      return valeurs.num_bikes_available-valeurs.num_ebikes_available
+    }
+    else if (bixiType === 'dock') {
+      return valeurs.num_docks_available
+    }
   }
 
   // Then modify the goToLocation function like this:
@@ -282,6 +293,15 @@ const goToLocation = () => {
     );
   }
 
+  const changeToEbike = () => {
+    if (bixiType != "ebike"){
+      setBixiType("ebike")
+    }
+    else{
+      setBixiType("default")
+    }
+    
+  }
   // Render error message if there's an error
   if (errorMsg) {
     return (
@@ -347,7 +367,16 @@ const goToLocation = () => {
       ))}
     */}
 
-        </MapView><TouchableOpacity
+        </MapView>
+        <TouchableOpacity
+        style={styles.toggleEbike}
+        activeOpacity={0.7}
+        onPress={changeToEbike}>
+          <Text style={styles.ebikeText}>Hello</Text>
+        </TouchableOpacity>
+
+
+        <TouchableOpacity
           style={styles.goToLocationButton}
           activeOpacity={0.7}
           onPress={goToLocation}>
@@ -429,6 +458,25 @@ const styles = StyleSheet.create({
   shadowRadius: 3.84,
 },
 refreshButtonText: {
+  color: 'white',
+  fontWeight: 'bold',
+  fontSize: 16,
+},
+toggleEbike: {
+  position: 'absolute',
+  top: 50,
+  right: 15,
+  backgroundColor: '#0000AA',
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  borderRadius: 25,
+  elevation: 3,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+},
+ebikeText: {
   color: 'white',
   fontWeight: 'bold',
   fontSize: 16,
