@@ -259,6 +259,7 @@ const goToLocation = () => {
           style={styles.map} 
           ref={mapRef}
           showsUserLocation={true}
+          showsScale={true}
           mapType="standard"
           
           initialRegion={{
