@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import MapView, { Geojson, Marker, Polyline } from 'react-native-maps';
-import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, TouchableOpacity, Modal, TextInput } from 'react-native';
 import * as Location from 'expo-location';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faLocationArrow } from '@fortawesome/free-solid-svg-icons';
+import { SearchBar } from 'react-native-elements';
 
 import bikePathsData from './data/reseau_cyclable.geojson.json';
 import arceaux from './data/csvjson.json';
@@ -21,6 +22,8 @@ export default function App() {
   const mapRef = useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [bixiType, setBixiType] = useState('default');
+  const [search, setSearch] = useState('');
+
 
 
   /*
@@ -216,6 +219,10 @@ const goToLocation = () => {
     setHideBike(!hideBike);
   }
 
+  const displayClosestToSearch = (search: string) => {
+    
+  }
+
 
   const renderBixiStations = () => {
     // Check if we have stations data
@@ -317,6 +324,33 @@ const goToLocation = () => {
       {location && (
         
         <>
+        <View style={{ position: 'absolute', top: 50, left: 10, right: 10, zIndex: 1}}>
+          <SearchBar
+            placeholder="Enter a location..."
+            onSubmitEditing={() => {}}
+            onChangeText={(value) => setSearch(value)}
+            value={search}
+            containerStyle={{ 
+              borderRadius: 15, 
+              backgroundColor: 'white', 
+              padding: 0, 
+              margin: 0, 
+              borderTopWidth: 0,
+              borderBottomWidth: 0,
+              borderLeftWidth: 0,
+              borderRightWidth: 0,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+            }}
+            inputContainerStyle={{ 
+              borderRadius: 15, 
+              backgroundColor: '#f0f0f0', 
+              borderBottomWidth: 0
+            }}
+          />
+        </View>
         
         <MapView
           style={styles.map}
@@ -326,10 +360,10 @@ const goToLocation = () => {
           mapType="standard"
 
           initialRegion={{
-            latitude: mapRegion.latitude,
-            longitude: mapRegion.longitude,
-            //latitude: location.coords.latitude,
-            //longitude: location.coords.longitude,
+            //latitude: mapRegion.latitude,
+            //longitude: mapRegion.longitude,
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
             latitudeDelta: 0.0922,
             longitudeDelta: 0.0421,
           }}
@@ -516,5 +550,17 @@ markerText: {
     fontWeight: 'bold',
     textAlign: 'center',
   },
-
+  input: {
+    height: 40,
+    margin: 20,
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 15,
+    borderColor: "#CCCCCC",
+    
+    
+    
+  },
 });
